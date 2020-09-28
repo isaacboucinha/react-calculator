@@ -7,6 +7,7 @@ const DECIMAL = "decimal";
 const NEGATIVE = "negative";
 const PERCENT = "percent";
 const OPERATOR = "operator";
+const EVAL = "eval";
 
 class ButtonPanel extends React.Component {
     constructor(props) {
@@ -27,6 +28,8 @@ class ButtonPanel extends React.Component {
             this.props.onPercentButtonPress(e.target.value, e);
         } else if(type === OPERATOR) {
             this.props.onOperatorButtonPress(e.target.value, e);
+        } else if(type === EVAL) {
+            this.props.onEvalButtonPress(e.target.value, e);
         }
     }
 
@@ -65,7 +68,7 @@ class ButtonPanel extends React.Component {
                     <Button onButtonPress={this.handleButtonPress.bind(this, NUMBER)} 
                             wide="true">0</Button>
                     <Button onButtonPress={this.handleButtonPress.bind(this, DECIMAL)}>.</Button>
-                    <Button onButtonPress={this.handleButtonPress.bind(this, OPERATOR)} 
+                    <Button onButtonPress={this.handleButtonPress.bind(this, EVAL)} 
                             orange="true">=</Button>
                 </div>
             </div>

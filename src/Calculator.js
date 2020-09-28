@@ -7,9 +7,9 @@ class Calculator extends React.Component {
         super();
         this.state = {
             value: "0",
-            isDecimal: false,
             lastOperator: null,
-            accumulatedValue: null
+            accumulatedValue: "0",
+            lastPressWasOperator: false
         }
 
         this.handleNumberButtonPress = this.handleNumberButtonPress.bind(this);
@@ -35,75 +35,6 @@ class Calculator extends React.Component {
         return number < 0 ? "- + number" : "" + number; 
     }
 
-    handleNumberButtonPress(number) {
-        this.setState((state) => {
-            let newValue = "";
-            let newAccumulatedValue = null;
-            if(state.lastOperator !== null) {
-                //if last press was an operator, save accumulated value
-                newAccumulatedValue = state.value;
-                state.value = "0";
-            }
-
-            if(state.value === "0") {
-                newValue = number;
-            } else {
-                newValue = state.value + number;
-            }
-            
-            return {value: newValue, 
-                    accumulatedValue: newAccumulatedValue,
-                    lastOperator: null};
-        });
-    }
-
-    handleClearButtonPress() {
-        this.setState({
-            value: "0",
-            isDecimal: false,
-            lastOperator: null,
-            accumulatedValue: null
-        });
-    }
-
-    handleDecimalButtonPress() {
-        this.setState((state) => {
-            if(!state.isDecimal) {        
-                let newValue = state.value + ".";
-                return {value: newValue, 
-                        isDecimal: true,
-                        lastOperator: null};
-            }
-            return {};
-        });
-    }
-    
-    handleNegativeButtonPress() {
-        this.setState((state) => {
-            let newValue;
-            if(state.value.charAt(0) === '-') {
-                //is already negative, make it positive
-                newValue = state.value.substring(1);
-            } else {
-                //is positive, make it negative
-                newValue = "-" + state.value;
-            }
-            return {value: newValue, lastOperator: null}
-        })
-    }
-
-    handlePercentButtonPress() {
-        this.setState((state) => {
-            if(state.value !== "0") {
-                let newValue = this.tryParseNumber(state.value);
-                newValue = 1.0 * newValue / 100;
-                return {value: this.numberToString(newValue),
-                        isDecimal: true,
-                        lastOperator: null}
-            }
-        })
-    }
-
     eval(currentValueString, accumulatedValueString, operator) {
         let currentValue = this.tryParseNumber(currentValueString);
         let accumulatedValue = this.tryParseNumber(accumulatedValueString);
@@ -124,26 +55,111 @@ class Calculator extends React.Component {
                     result = accumulatedValue * currentValue;
                     break;
                 default:
-                    throw new Error("Unknown Operator");
+                    result = accumulatedValue;
             }
         }
 
         return this.numberToString(result);
     }
 
-    handleOperatorButtonPress(operator) {
+    handleNumberButtonPress(number) {
         this.setState((state) => {
-            if(state.lastOperator) {
-                return {lastOperator: operator};
+            // debugger;
+            let value = state.value;
+            let newAccumulatedValue = state.accumulatedValue;
+            if(state.lastPressWasOperator) {
+                //if last press was an operator, save accumulated value
+                newAccumulatedValue = state.value;
+                value = "0";
             }
 
+            if(value === "0") {
+                value = number;
+            } else {
+                value = state.value + number;
+            }
             
+            return {value: value, 
+                    accumulatedValue: newAccumulatedValue,
+                    lastPressWasOperator: false};
+        });
+    }
+
+    handleClearButtonPress() {
+        this.setState({
+            value: "0",
+            lastOperator: null,
+            accumulatedValue: "0",
+            lastPressWasOperator: false
+        });
+    }
+
+    handleDecimalButtonPress() {
+        this.setState((state) => {
+            if(!state.value.includes('.')) {        
+                let newValue = state.value + ".";
+                return {value: newValue, 
+                        lastPressWasOperator: false};
+            }
+            return {};
+        });
+    }
+    
+    handleNegativeButtonPress() {
+        this.setState((state) => {
+            let newValue;
+            if(state.value.charAt(0) === '-') {
+                //is already negative, make it positive
+                newValue = state.value.substring(1);
+            } else {
+                //is positive, make it negative
+                newValue = "-" + state.value;
+            }
+            return {value: newValue, lastPressWasOperator: false}
+        })
+    }
+
+    handlePercentButtonPress() {
+        this.setState((state) => {
+            if(state.value !== "0") {
+                let newValue = this.tryParseNumber(state.value);
+                newValue = 1.0 * newValue / 100;
+                return {value: this.numberToString(newValue),
+                        lastOperator: null}
+            }
+        })
+    }
+
+    handleOperatorButtonPress(operator) {
+        this.setState((state) => {
+            // debugger;
+            //if last press operator, simply replace operator
+            if(state.lastPressWasOperator) {
+                return {lastOperator: operator};
+            }
+            
+            //last press was not operator
+            //if there is an accumulated value, evaluate it
+            let res = state.value;
+            if(state.accumulatedValue !== "0") {
+                res = this.eval(state.value, state.accumulatedValue, state.lastOperator);
+            }
+
+            return {value: res,
+                    lastOperator: operator,
+                    lastPressWasOperator: true
+                }
         });
     }
 
     handleEvalButtonPress() {
         this.setState((state) => {
-            
+            // debugger;
+            let res = this.eval(state.value, state.accumulatedValue, state.lastOperator);
+            return {
+                value: res,
+                lastPressWasOperator: true
+            }
         });
     }
 
